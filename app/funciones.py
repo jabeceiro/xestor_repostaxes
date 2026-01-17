@@ -87,3 +87,26 @@ def calcular_consumo_medio(repostaxes: list[dict[str, Any]]) -> float | None:
 
     litros_totais = sum(r["litros"] for r in repostaxes)
     return (litros_totais / distancia) * 100
+
+def calcular_km_totais(repostaxes: list[dict]) -> int:
+    """
+    Calcula os kms totais percorridos a partir da lista de repostaxes.
+    Asumese que as repostaxes están en orde cronolóxica.
+    """
+    if len(repostaxes) < 2:
+        return 0  # Non hai kilometraxe medible
+
+    primeiro, *_, ultimo = repostaxes
+    return ultimo["kilometraxe"] - primeiro["kilometraxe"]
+
+
+def obter_repostaxes_extremos(repostaxes: list[dict]) -> tuple[dict, dict]:
+    """
+    Devolve o primeiro e o último rexistro de repostaxe.
+    Asumese que a lista está en orde cronolóxica.
+    """
+    if not repostaxes:
+        return None, None
+
+    primeiro, *_, ultimo = repostaxes
+    return primeiro, ultimo

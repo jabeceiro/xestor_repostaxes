@@ -1,38 +1,32 @@
-from app.io import (
-    mostrar_menu,
-    pedir_opcion,
-    rexistrar_repostaxe_desde_input,
-    mostrar_historial,
-    mostrar_gasto_total,
-    mostrar_consumo_medio,
-    cargar_repostaxes,
-    gardar_repostaxes
-)
+from app import io
 
 
 def main():
-    repostaxes = cargar_repostaxes()
+    repostaxes = io.cargar_repostaxes()
 
     while True:
-        mostrar_menu()
-        opcion = pedir_opcion()
-
-        if opcion == 1:
-            rexistrar_repostaxe_desde_input(repostaxes)
-        elif opcion == 2:
-            mostrar_historial(repostaxes)
-        elif opcion == 3:
-            mostrar_gasto_total(repostaxes)
-        elif opcion == 4:
-            mostrar_consumo_medio(repostaxes)
-        elif opcion == 5:
-            gardar_repostaxes(repostaxes)
-            print("Datos gardados.")
-        elif opcion == 6:
-            print("Saíndo...")
-            break
-        else:
-            print("Opción non válida.")
+        print()
+        io.mostrar_menu()
+        opcion = io.pedir_opcion_menu()
+        match opcion:
+            case 1:
+                io.rexistrar_repostaxe_desde_input(repostaxes)
+            case 2:
+                io.mostrar_historial(repostaxes)
+            case 3:
+                io.mostrar_gasto_total(repostaxes)
+            case 4:
+                io.mostrar_consumo_medio(repostaxes)
+            case 5:
+                io.mostrar_resumo(repostaxes)   
+            case 6:
+                io.gardar_repostaxes(repostaxes)
+                print("\n✅ Datos gardados.")
+            case 0:
+                print("Saíndo...")
+                break
+            case _:
+                print("\n❌ Opción non válida.","Introduce un número do 0 o 6.",sep="\n")
 
 
 if __name__ == "__main__":

@@ -23,7 +23,9 @@ from datetime import date
 from .funciones import (
     crear_repostaxe,
     calcular_gasto_total,
-    calcular_consumo_medio
+    calcular_consumo_medio,
+    calcular_km_totais,
+    obter_repostaxes_extremos
 )
 
 RUTA_DATOS = Path("data") / "datos.json"
@@ -61,21 +63,24 @@ def gardar_repostaxes(repostaxes: list[dict[str, Any]]) -> None:
 # Interface textual
 # -----------------------------
 def mostrar_menu() -> None:
-    print("\n--- XESTOR DE REPOSTAXES ---")
-    print("----------------------------")
-    print("1. Rexistrar repostaxe")
-    print("2. mostrar historial")
-    print("3. Calcular gasto total")
-    print("4. Calcular consumo medio")
-    print("5. Gardar datos")
-    print("6. Saír")
+    print("╔════════════════════════════╗")
+    print("║    XESTOR DE REPOSTAXES    ║") 
+    print("╚════════════════════════════╝")
+    print(" 1. Rexistrar repostaxe")
+    print(" 2. Mostrar historial")
+    print(" 3. Calcular gasto total")
+    print(" 4. Calcular consumo medio")
+    print(" 5. Mostrar resumen")
+    print(" 6. Gardar datos")
+    print(" 0. Saír")
+    
+    print("═"*32)
 
-
-def pedir_opcion() -> int:
+def pedir_opcion_menu() -> int:
     try:
         return int(input("Escolle unha opción: "))
     except ValueError:
-        print("Erro: introduce un número.")
+        # print("Erro: introduce un número.")
         return -1
 
 
@@ -109,38 +114,99 @@ def rexistrar_repostaxe_desde_input(repostaxes: list[dict[str, Any]]) -> None:
     repostaxes.append(repostaxe)
     print("Repostaxe rexistrada correctamente.")
 
+def mostrar_encabezado(titulo: str, lonxitude: int = 32) -> None:
+    """
+    Mostra un encabezado centrado cunha liña superior e inferior.
 
-def mostrar_historial(repostaxes: list[dict[str, Any]]) -> None:
-    print("\n--- Historial de repostaxes ---")
-    print("-------------------------------")
+    Args:
+        titulo (str): Texto que se mostrará centrado.
+        lonxitude (int): Ancho total da liña decorativa.
+    """
+    liña = "=" * lonxitude
+    print("\n" + liña)
+    print(titulo.center(lonxitude))
+    print(liña)
 
+
+def mostrar_historial(repostaxes):
+       
+    mostrar_encabezado("HISTORIAL DE REPOSTAXES", 50)
+    
     if not repostaxes:
         print("Non hai datos.")
         return
 
+    # Cabeceiras aliñadas
+    print(f"{'Data':<12} {'Litros':>8} {'€/L':>8} {'Km':>10}")
+    print("-" * 50)
+
     for r in repostaxes:
-        print(f"{r['data']} | {r['litros']} L | {r['precio_litro']} €/L | {r['kilometraxe']} km")
+        print(f"{r['data']:<12} {r['litros']:>8.2f} {r['precio_litro']:>8.2f} {r['kilometraxe']:>10}")
 
 
 def mostrar_gasto_total(repostaxes: list[dict[str, Any]]) -> None:
-    print("\n--- Calcular gasto total ---")
-    print("----------------------------")
     
+    mostrar_encabezado("CALCULAR GASTO TOTAL", 32)
+
     if not repostaxes:
         print("Non hai datos para calcular o gasto.")
         return
 
     total = calcular_gasto_total(repostaxes)
-    print(f"Gasto total: {total:.2f} €")
+    
+    # Asumindo que as repostaxes están en orde cronolóxica 
+    primeiro, ultimo = obter_repostaxes_extremos(repostaxes)
+    data_inicio = primeiro["data"] 
+    data_fin = ultimo["data"]
+    
+    ancho = 18   # ancho da columna esquerda
+    print(f"{'Data inicio:':{ancho}} {data_inicio}") 
+    print(f"{'Data fin:':{ancho}} {data_fin}") 
+    print(f"{'Gasto total:':{ancho}} {total:>10.2f} €")
 
 
 def mostrar_consumo_medio(repostaxes: list[dict[str, Any]]) -> None:
-    print("\n--- Calcular consumo medio ---")
-    print("------------------------------")
+    mostrar_encabezado("CALCULAR CONSUMO MEDIO", 40)
 
     consumo = calcular_consumo_medio(repostaxes)
     if consumo is None:
         print("Non se pode calcular o consumo medio.")
         return
+    
+    # Asumindo que as repostaxes están en orde cronolóxica 
+    primeiro,ultimo =obter_repostaxes_extremos(repostaxes) 
+    data_inicio = primeiro["data"] 
+    data_fin = ultimo["data"]
+   
+    ancho = 18    # ancho da columna esquerda
+    print(f"{'Data inicio:':{ancho}} {data_inicio}") 
+    print(f"{'Data fin:':{ancho}} {data_fin}") 
+    print(f"{'Consumo medio :':{ancho}} {consumo:>10.2f} L/100 km")
+    
+def mostrar_resumo(repostaxes: list[dict[str, Any]]) -> None:
+    mostrar_encabezado("RESUMO XERAL", 40)
 
-    print(f"Consumo medio: {consumo:.2f} L/100 km")
+    if not repostaxes:
+        print("Non hai datos para mostrar o resumo.")
+        return
+
+    # Km totais
+    km_totais = calcular_km_totais(repostaxes)
+
+    # Gasto total
+    gasto_total = calcular_gasto_total(repostaxes)
+
+    # Consumo total en litros
+    litros_totais = sum(r["litros"] for r in repostaxes)
+
+    primeiro, ultimo = obter_repostaxes_extremos(repostaxes) 
+    data_inicio = primeiro["data"] 
+    data_fin = ultimo["data"]
+   
+    ancho = 20  # ancho da columna esquerda
+    print(f"{'Data inicio:':<{ancho}} {data_inicio}") 
+    print(f"{'Data fin:':<{ancho}} {data_fin}")
+    print(f"{'Km totais:':<{ancho}} {km_totais}")
+    print(f"{'Gasto total:':<{ancho}} {gasto_total:.2f} €")
+    print(f"{'Litros totais:':<{ancho}} {litros_totais:.2f} L")
+    print()
