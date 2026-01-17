@@ -24,15 +24,25 @@ def crear_repostaxe(
         - precio_litro > 0
         - kilometraxe > 0
         - a quilometraxe debe ser maior que a última rexistrada
-        - a data debe ter formato YYYY-MM-DD
+        - a data (YYYY-MM-DD) e non debe ser anterior a da última repostaxe
     """
 
     # Validación da data de repostaxe
     try:
-        datetime.strptime(data, "%Y-%m-%d")
+        data_nova =datetime.strptime(data, "%Y-%m-%d").date()
     except ValueError:
         return None, "A data debe ter o formato YYYY-MM-DD."
-
+    
+    # Validación de data non anterior á última rexistrada 
+    if existentes:
+        try:
+            data_ultima = datetime.strptime(existentes[-1]["data"], "%Y-%m-%d").date() 
+            if data_nova < data_ultima:
+                return None, "A data non pode ser anterior á data da última repostaxe rexistrada." 
+        except ValueError:
+            return None, "Erro ao intentar recuperar a data da última repostaxe."
+    
+    # Validación de valores positivos
     if litros <= 0:
         return None, "Os litros deben ser positivos."
 
@@ -41,10 +51,12 @@ def crear_repostaxe(
 
     if kilometraxe <= 0:
         return None, "A quilometraxe debe ser positiva."
-
+    
+    # Validación de quilometraxe maior que a última rexistrada
     if existentes and kilometraxe <= existentes[-1]["kilometraxe"]:
         return None, "A quilometraxe debe ser maior que a última rexistrada."
-
+    
+    # Se todo é correcto, construímos a repostaxe
     repostaxe = {
         "data": data,
         "litros": litros,
