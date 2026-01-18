@@ -4,19 +4,24 @@ Aplicación en Python que permite rexistrar repostaxes dun vehículo, consultar 
 O proxecto está estruturado de forma modular seguindo a arquitectura e requisitos indicada no enunciado da tarefa.
 
 ---
+
 ## Requisitos previos
 - Python 3.10 ou superior
 - Git (opcional)
----
+
 ### 1. Clonar ou descargar o proxecto.
+
 Se usas Git:
 
 ```bash
 git clone git@github.com:jabeceiro/xestor_repostaxes.git
 cd xestor_repostaxes
 ```
+
 Se non usas Git:  
+
  - Elixe "descargar ZIP"
+
 ### 2. Crear e activar o entorno virtual
 
 ```bash
@@ -34,6 +39,7 @@ python -m venv .venv
 ```bash
 source .venv/bin/activate  
 ```
+
 ### 3. Instalar dependencias
 
 ```
