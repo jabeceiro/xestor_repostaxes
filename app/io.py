@@ -76,17 +76,29 @@ def gardar_repostaxes(repostaxes: list[dict[str, Any]]) -> None:
 # ------------------------------------------------------------
 #  Interface textual
 # ------------------------------------------------------------
+def mostrar_menu(modificado: bool = False) -> None:
+    """
+    Mostra o menú principal da aplicación.
 
-def mostrar_menu() -> None:
+    Args:
+        modificado (bool): Indica se existen cambios sen gardar.
+                           Cando é True, móstrase un asterisco (*) no menú.
+    """
+    
+    indicador = " *" if modificado else ""
+    
     print("╔════════════════════════════╗")
-    print("║    XESTOR DE REPOSTAXES    ║") 
+    print(f"║    XESTOR DE REPOSTAXES {indicador:<3}║")
     print("╚════════════════════════════╝")
     print(" 1. Rexistrar repostaxe")
     print(" 2. Mostrar historial")
     print(" 3. Calcular gasto total")
     print(" 4. Calcular consumo medio")
     print(" 5. Mostrar resumen")
-    print(" 6. Gardar datos")
+    if modificado:
+        print(" 6. Gardar datos *")
+    else:    
+        print(" 6. Gardar datos")
     print(" 0. Saír")
     print("═"*32)
 
@@ -124,6 +136,7 @@ def rexistrar_repostaxe_desde_input(repostaxes: list[dict[str, Any]]) -> None:
     Args: 
         repostaxes (list[dict]): Lista de repostaxes existente. 
     """
+    
     mostrar_encabezado("REXISTRAR REPOSTAXE", 40)
 
     data = pedir_data()
@@ -133,18 +146,18 @@ def rexistrar_repostaxe_desde_input(repostaxes: list[dict[str, Any]]) -> None:
         prezo = float(input("Prezo por litro (€): "))
         km = int(input("Quilometraxe: "))
     except ValueError:
-        print("Erro: valores numéricos incorrectos.")
+        print("\n❌ Erro: valores numéricos incorrectos.")
         return
 
     repostaxe, erro = crear_repostaxe(data, litros, prezo, km, repostaxes)
 
     if erro:
-        print(f"Erro: {erro}")
+        print(f"\n❌ Erro: {erro}")
         return
 
     repostaxes.append(repostaxe)
     
-    print("Repostaxe rexistrada correctamente.")
+    print("\n✅ Repostaxe rexistrada correctamente.")
 
 
 def mostrar_encabezado(titulo: str, lonxitude: int = 32) -> None:
@@ -179,8 +192,13 @@ def mostrar_historial(repostaxes: list[dict[str, Any]]) -> None:
     print(f"{'Data':<12} {'Litros':>8} {'€/L':>8} {'Km':>10}")
     print("-" * 50)
 
-    for r in repostaxes:
-        print(f"{r['data']:<12} {r['litros']:>8.2f} {r['prezo_litro']:>8.2f} {r['kilometraxe']:>10}")
+    for i, r in enumerate(repostaxes, start=1):
+        try:
+            print(f"{r['data']:<12} {r['litros']:>8.2f} {r['prezo_litro']:>8.2f} {r['kilometraxe']:>10}")
+        except KeyError as e: 
+            print(f"[Rexistro {i}] Erro: falta a clave {e.args[0]!r}. Rexistro ignorado.") 
+        except (TypeError, ValueError): 
+            print(f"[Rexistro {i}] Erro: datos corruptos. Rexistro ignorado.")    
 
 
 def mostrar_gasto_total(repostaxes: list[dict[str, Any]]) -> None:
@@ -196,19 +214,22 @@ def mostrar_gasto_total(repostaxes: list[dict[str, Any]]) -> None:
     if not repostaxes:
         print("Non hai datos para calcular o gasto.")
         return
-
-    total = calcular_gasto_total(repostaxes)
+    try:
+        total = calcular_gasto_total(repostaxes)
     
-    primeiro, ultimo = obter_repostaxes_extremos(repostaxes)
-    data_inicio = primeiro["data"] 
-    data_fin = ultimo["data"]
+        primeiro, ultimo = obter_repostaxes_extremos(repostaxes)
+        data_inicio = primeiro["data"] 
+        data_fin = ultimo["data"]
     
-    ancho = 18   # ancho da columna esquerda
-    print(f"{'Data inicio:':{ancho}} {data_inicio}") 
-    print(f"{'Data fin:':{ancho}} {data_fin}") 
-    print(f"{'Gasto total:':{ancho}} {total:>10.2f} €")
-
-
+        ancho = 18   # ancho da columna esquerda
+        print(f"{'Data inicio:':{ancho}} {data_inicio}") 
+        print(f"{'Data fin:':{ancho}} {data_fin}") 
+        print(f"{'Gasto total:':{ancho}} {total:>10.2f} €")
+    
+    except (KeyError, TypeError, ValueError): 
+        print("Erro: datos corruptos en datos.json.")
+        
+        
 def mostrar_consumo_medio(repostaxes: list[dict[str, Any]]) -> None:
     """
     Mostra o consumo medio en L/100 km.
@@ -223,16 +244,18 @@ def mostrar_consumo_medio(repostaxes: list[dict[str, Any]]) -> None:
     if consumo is None:
         print("Non se pode calcular o consumo medio.")
         return
+    try:
+        primeiro,ultimo =obter_repostaxes_extremos(repostaxes) 
+        data_inicio = primeiro["data"] 
+        data_fin = ultimo["data"]
+       
+        ancho = 18    # ancho da columna esquerda
+        print(f"{'Data inicio:':{ancho}} {data_inicio}") 
+        print(f"{'Data fin:':{ancho}} {data_fin}") 
+        print(f"{'Consumo medio:':{ancho}} {consumo:>10.2f} L/100 km")
     
-    primeiro,ultimo =obter_repostaxes_extremos(repostaxes) 
-    data_inicio = primeiro["data"] 
-    data_fin = ultimo["data"]
-   
-    ancho = 18    # ancho da columna esquerda
-    print(f"{'Data inicio:':{ancho}} {data_inicio}") 
-    print(f"{'Data fin:':{ancho}} {data_fin}") 
-    print(f"{'Consumo medio:':{ancho}} {consumo:>10.2f} L/100 km")
-
+    except (KeyError, TypeError, ValueError):
+            print("Erro: datos corruptos en datos.json.")
     
 def mostrar_resumo(repostaxes: list[dict[str, Any]]) -> None:
     """
@@ -251,28 +274,33 @@ def mostrar_resumo(repostaxes: list[dict[str, Any]]) -> None:
     if not repostaxes:
         print("Non hai datos para mostrar o resumo.")
         return
-
-    # Km totais
-    km_totais = calcular_km_totais(repostaxes)
-
-    # Gasto total
-    gasto_total = calcular_gasto_total(repostaxes)
-
-    # Consumo total en litros
-    litros_totais = calcular_litros_totais(repostaxes)
     
-    # Consumo medio en L/100 km
-    consumo = calcular_consumo_medio(repostaxes)
+    try:
+       # Km totais
+       km_totais = calcular_km_totais(repostaxes)
     
-    primeiro, ultimo = obter_repostaxes_extremos(repostaxes) 
-    data_inicio = primeiro["data"] 
-    data_fin = ultimo["data"]
-   
-    ancho = 20  # ancho da columna esquerda
-    print(f"{'Data inicio:':<{ancho}} {data_inicio}") 
-    print(f"{'Data fin:':<{ancho}} {data_fin}")
-    print(f"{'Gasto total:':<{ancho}} {gasto_total:.2f} €")
-    print(f"{'Km totais:':<{ancho}} {km_totais:>5} km")
-    print(f"{'Litros totais:':<{ancho}} {litros_totais:.2f} L")
-    print(f"{'Consumo medio:':<{ancho}} {consumo:.2f} L/100 km")
-    print()
+       # Gasto total
+       gasto_total = calcular_gasto_total(repostaxes)
+    
+       # Consumo total en litros
+       litros_totais = calcular_litros_totais(repostaxes)
+       
+       # Consumo medio en L/100 km
+       consumo = calcular_consumo_medio(repostaxes)
+       
+       primeiro, ultimo = obter_repostaxes_extremos(repostaxes) 
+       data_inicio = primeiro["data"] 
+       data_fin = ultimo["data"]
+       
+       ancho = 20  # ancho da columna esquerda
+       print(f"{'Data inicio:':<{ancho}} {data_inicio}") 
+       print(f"{'Data fin:':<{ancho}} {data_fin}")
+       print(f"{'Gasto total:':<{ancho}} {gasto_total:.2f} €")
+       print(f"{'Km totais:':<{ancho}} {km_totais:>5} km")
+       print(f"{'Litros totais:':<{ancho}} {litros_totais:.2f} L")
+       print(f"{'Consumo medio:':<{ancho}} {consumo:.2f} L/100 km")
+       print()
+    
+    except (KeyError, TypeError, ValueError):
+        print("Erro: datos corruptos en datos.json.")
+        
